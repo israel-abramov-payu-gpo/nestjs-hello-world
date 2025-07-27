@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Phishing Test Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .user-info {
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 1rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel h2 {
+            margin-bottom: 1.5rem;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .create-btn, .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .create-btn:hover, .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .create-btn:disabled, .refresh-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .refresh-btn {
+            margin-bottom: 1rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        table th,
+        table td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-clicked {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error-message, .success-message {
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c763d;
+            border-left: 4px solid #3c763d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Phishing Test Dashboard</h1>
+        <div class="user-info">
+            <span id="userEmail">Loading...</span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Create Phishing Panel -->
+        <div class="panel">
+            <h2>Create Phishing Attempt</h2>
+            
+            <div id="createErrorMessage" class="error-message"></div>
+            <div id="createSuccessMessage" class="success-message"></div>
+
+            <form id="phishingForm">
+                <div class="form-group">
+                    <label for="targetEmail">Target Email</label>
+                    <input type="email" id="targetEmail" name="targetEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="targetName">Target Name</label>
+                    <input type="text" id="targetName" name="targetName" required>
+                </div>
+
+                <button type="submit" class="create-btn" id="createBtn">
+                    Create Phishing Attempt
+                </button>
+            </form>
+        </div>
+
+        <!-- Phishing Attempts List Panel -->
+        <div class="panel">
+            <h2>Phishing Attempts</h2>
+            
+            <button class="refresh-btn" id="refreshBtn" onclick="loadPhishingAttempts()">
+                Refresh List
+            </button>
+
+            <div id="listErrorMessage" class="error-message"></div>
+
+            <div class="table-container">
+                <div id="loadingTable" class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading phishing attempts...
+                </div>
+
+                <table id="phishingTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Target Email</th>
+                            <th>Target Name</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Clicked At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="phishingTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PHISHING_API_URL = 'http://localhost:3002'; // Phishing service URL
+        
+        let userId = '';
+        let sessionToken = '';
+        let userEmail = '';
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get query parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            userId = urlParams.get('userId');
+            sessionToken = urlParams.get('sessionToken');
+            userEmail = urlParams.get('email');
+            
+            // Check if required parameters are present
+            if (!userId || !sessionToken || !userEmail) {
+                alert('Missing required parameters. Redirecting to login...');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Display user email
+            document.getElementById('userEmail').textContent = userEmail;
+            
+            // Load initial phishing attempts
+            loadPhishingAttempts();
+        });
+
+        // Handle phishing form submission
+        document.getElementById('phishingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const targetEmail = document.getElementById('targetEmail').value;
+            const targetName = document.getElementById('targetName').value;
+            const createBtn = document.getElementById('createBtn');
+            
+            // Hide messages
+            hideMessages('create');
+            
+            // Show loading state
+            createBtn.disabled = true;
+            createBtn.textContent = 'Creating...';
+            
+            try {
+                const response = await fetch(`${PHISHING_API_URL}/phishing`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': sessionToken
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        email: targetEmail,
+                        targetName: targetName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccessMessage('create', 'Phishing attempt created successfully!');
+                    // Clear form
+                    document.getElementById('phishingForm').reset();
+                    // Refresh the list
+                    loadPhishingAttempts();
+                } else {
+                    showErrorMessage('create', data.message || 'Failed to create phishing attempt.');
+                }
+            } catch (error) {
+                console.error('Create phishing error:', error);
+                showErrorMessage('create', 'Network error. Please check your connection and try again.');
+            } finally {
+                createBtn.disabled = false;
+                createBtn.textContent = 'Create Phishing Attempt';
+            }
+        });
+
+        // Load phishing attempts
+        async function loadPhishingAttempts() {
+            const loadingTable = document.getElementById('loadingTable');
+            const phishingTable = document.getElementById('phishingTable');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            // Show loading state
+            loadingTable.style.display = 'block';
+            phishingTable.style.display = 'none';
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = 'Loading...';
+            hideMessages('list');
+            
+            try {
+                const response = await fetch(`${PHISHING_API_URL}/phishing/getAll`, {
+                    headers: {
+                        'Authorization': sessionToken
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayPhishingAttempts(data);
+                } else {
+                    showErrorMessage('list', data.message || 'Failed to load phishing attempts.');
+                }
+            } catch (error) {
+                console.error('Load phishing attempts error:', error);
+                showErrorMessage('list', 'Network error. Please check your connection and try again.');
+            } finally {
+                loadingTable.style.display = 'none';
+                phishingTable.style.display = 'table';
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = 'Refresh List';
+            }
+        }
+
+        // Display phishing attempts in table
+        function displayPhishingAttempts(attempts) {
+            const tbody = document.getElementById('phishingTableBody');
+            tbody.innerHTML = '';
+            
+            if (attempts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No phishing attempts found</td></tr>';
+                return;
+            }
+            
+            attempts.forEach(attempt => {
+                const row = document.createElement('tr');
+                
+                // Determine status and badge class
+                let statusClass = 'status-pending';
+                let statusText = 'Pending';
+                let clickedAt = '-';
+                
+                switch(attempt.status) {
+                    case 'PENDING':
+                        statusClass = 'status-pending';
+                        statusText = 'Pending';
+                        clickedAt = '-';
+                        break;
+                    case 'SCAMMED':
+                        statusClass = 'status-clicked';
+                        statusText = 'Clicked';
+                        clickedAt = attempt.updatedAt ? formatDate(attempt.updatedAt) : 'Unknown';
+                        break;
+                    case 'EXPIRED':
+                        statusClass = 'status-completed';
+                        statusText = 'Expired';
+                        clickedAt = '-';
+                        break;
+                    case 'FAILED':
+                        statusClass = 'status-completed';
+                        statusText = 'Failed';
+                        // Show clicked time if updatedAt is different from createdAt (indicating user interaction)
+                        if (attempt.updatedAt && attempt.updatedAt !== attempt.createdAt) {
+                            clickedAt = formatDate(attempt.updatedAt);
+                        } else {
+                            clickedAt = '-';
+                        }
+                        break;
+                    default:
+                        statusClass = 'status-pending';
+                        statusText = attempt.status || 'Unknown';
+                        clickedAt = attempt.updatedAt && attempt.updatedAt !== attempt.createdAt 
+                            ? formatDate(attempt.updatedAt) 
+                            : '-';
+                }
+                
+                row.innerHTML = `
+                    <td>${attempt.email || 'N/A'}</td>
+                    <td>${attempt.targetName || 'N/A'}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>${formatDate(attempt.createdAt)}</td>
+                    <td>${clickedAt}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+
+        // Show error message
+        function showErrorMessage(type, message) {
+            const errorElement = document.getElementById(type + 'ErrorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        // Show success message
+        function showSuccessMessage(type, message) {
+            const successElement = document.getElementById(type + 'SuccessMessage');
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+        }
+
+        // Hide messages
+        function hideMessages(type) {
+            const errorElement = document.getElementById(type + 'ErrorMessage');
+            const successElement = document.getElementById(type + 'SuccessMessage');
+            
+            if (errorElement) errorElement.style.display = 'none';
+            if (successElement) successElement.style.display = 'none';
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>

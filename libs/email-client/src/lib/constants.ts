@@ -1,0 +1,2 @@
+export const EMAIL_CLIENT = 'EMAIL_CLIENT';
+export const EMAIL_TRANSPORTER = 'EMAIL_TRANSPORTER';

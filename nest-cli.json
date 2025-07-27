@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "monorepo": true,
+  "projects": {
+    "users": {
+      "type": "application",
+      "root": "apps/users",
+      "entryFile": "main",
+      "sourceRoot": "apps/users/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/users/tsconfig.app.json"
+      }
+    },
+    "iam": {
+      "type": "application",
+      "root": "apps/iam",
+      "entryFile": "main",
+      "sourceRoot": "apps/iam/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/iam/tsconfig.app.json"
+      }
+    },
+    "phishing": {
+      "type": "application",
+      "root": "apps/phishing",
+      "entryFile": "main",
+      "sourceRoot": "apps/phishing/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/phishing/tsconfig.app.json"
+      }
+    }
+  }
+}

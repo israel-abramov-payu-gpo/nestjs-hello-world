@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+
+  users:
+    build:
+      context: .
+      dockerfile: apps/users/Dockerfile
+    container_name: users-service
+    restart: unless-stopped
+    ports:
+      - "${USERS_PORT:-3001}:3000"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+
+  iam:
+    build:
+      context: .
+      dockerfile: apps/iam/Dockerfile
+    container_name: iam-service
+    restart: unless-stopped
+    ports:
+      - "${IAM_PORT:-3003}:3000"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - users
+
+  phishing:
+    build: 
+      context: .
+      dockerfile: apps/phishing/Dockerfile
+    container_name: phishing-service
+    restart: unless-stopped
+    ports:
+      - "${PHISHING_PORT:-3002}:3000"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - iam
+
+volumes:
+  mongo_data:

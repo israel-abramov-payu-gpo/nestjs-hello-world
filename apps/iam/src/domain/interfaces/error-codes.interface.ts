@@ -1,0 +1,11 @@
+/**
+ * Error codes for session verification failures
+ */
+export enum SessionErrorCode {
+  TOKEN_MISMATCH = 'TOKEN_MISMATCH',
+  SESSION_NOT_FOUND = 'SESSION_NOT_FOUND',
+  SESSION_EXPIRED = 'SESSION_EXPIRED',
+  USER_NOT_FOUND = 'USER_NOT_FOUND',
+  INVALID_TOKEN = 'INVALID_TOKEN',
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+}
